@@ -272,6 +272,6 @@ if "__main__" == __name__:
             if os.path.exists(colored_save_path):
                 logging.warning(f"Existing file: '{colored_save_path}' will be overwritten")
             image = pipe_out.img_pil
-            lineart = pipe_out.to_save_dict['edge2']
+            lineart = pipe_out.to_save_dict['edge2_black']
             image.save(colored_save_path)
             lineart.save(lineart_save_path)

@@ -101,13 +101,21 @@ The gradio demo would look like the UI shown below.
 <table align="center">
   <tr>
     <td>
-      <img src="docs/gradio.png" width="300" height="400">
+      <img src="docs/gradio1.png" width="300" height="400">
+    </td>
+    <td>
+      <img src="docs/gradio2.png" width="300" height="400">
     </td>
   </tr>
 </table>
 A biref tutorial:
 
-1. Upload the reference image and target image. Note that for the target image, there are two modes: you can upload an RGB image, and the model will automatically extract the line art; or you can directly upload the line art by checking the 'input is lineart' option.
+1. Upload the reference image and target image. 
+
+    Note that for the target image, there are two modes: you can upload an RGB image, and the model will automatically extract the line art; or you can directly upload the line art by checking the 'input is lineart' option. 
+
+    The line art images are single-channel grayscale images, where the input consists of floating-point values with the background set to 0 and the line art close to 1. Additionally, we would like to further communicate with our users: if the line art you commonly use is binarized, please let us know. We will fine-tune the model and release an updated version to better suit your needs. 😆
+
 2. Click 'Process Images' to resize the images to 512*512 resolution.
 3. (Optional) **Starting from the reference image**, **alternately** click on the reference and target images in sequence to define matching points. Use 'Undo' to revert the last action.
 4. Click 'Generate' to produce the result.

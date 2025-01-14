@@ -220,7 +220,7 @@ def get_select_coords(img1, img2, evt: gr.SelectData):
         clicked_points = clicked_points_img2
 
     current_img_idx = 1 - current_img_idx
-    img_pil = Image.fromarray(current_img.astype('uint8'), 'RGB')
+    img_pil = Image.fromarray(current_img.astype('uint8'))
     draw = ImageDraw.Draw(img_pil)
     for idx, point in enumerate(clicked_points):
         x, y = point
@@ -256,7 +256,7 @@ def undo_last_point(ref, base):
         clicked_points_other = clicked_points_img1
 
     # Redraw the image without the last point
-    img_pil = Image.fromarray(current_img.astype('uint8'), 'RGB')
+    img_pil = Image.fromarray(current_img.astype('uint8'))
     draw = ImageDraw.Draw(img_pil)
     for idx, point in enumerate(clicked_points):
         x, y = point
@@ -268,7 +268,7 @@ def undo_last_point(ref, base):
     img_out = np.array(img_pil)
 
 
-    img_pil_other = Image.fromarray(current_img_other.astype('uint8'), 'RGB')
+    img_pil_other = Image.fromarray(current_img_other.astype('uint8'),)
     draw_other = ImageDraw.Draw(img_pil_other)
     for idx, point in enumerate(clicked_points_other):
         x, y = point
@@ -296,13 +296,13 @@ def undo_last_point(ref, base):
 
 # Main function to run the image processing
 def run_local(ref, base, *args):
-    image = Image.fromarray(base, 'RGB')
-    ref_image = Image.fromarray(ref, 'RGB')
+    image = Image.fromarray(base)
+    ref_image = Image.fromarray(ref)
     
     pipe_out = inference_single_image(ref_image.copy(), image.copy(), *args)
     to_save_dict = pipe_out.to_save_dict
     to_save_dict['edit2'] = pipe_out.img_pil
-    return [to_save_dict['edit2'], to_save_dict['edge2']]
+    return [to_save_dict['edit2'], to_save_dict['edge2_black']]
 
 with gr.Blocks() as demo:
     with gr.Column():

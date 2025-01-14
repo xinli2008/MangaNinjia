@@ -165,12 +165,12 @@ class MangaNinjiaPipeline(DiffusionPipeline):
             img = rgb_norm
             assert img.min() >= -1.0 and img.max() <= 1.0
             return img
+        raw2_real = raw2.convert('L')
         ref1 = normalize_img(ref1)
         raw2 = normalize_img(raw2)
         edit2 = normalize_img(edit2)
-        
-        # ----------------- predicting depth -----------------
         single_rgb_dataset = TensorDataset(ref1[None], raw2[None], edit2[None])
+
         
         # find the batch size
         if batch_size>0:
@@ -226,6 +226,8 @@ class MangaNinjiaPipeline(DiffusionPipeline):
         assert len(iterable_bar) == 1
         for batch in iterable_bar:
             (ref1, raw2, edit2) = batch  # here the image is still around 0-1
+            if is_lineart:
+                raw2 = raw2_real
             img_pred, to_save_dict = self.single_infer(
                 is_lineart=is_lineart,
                 ref1=ref1,
@@ -245,9 +247,17 @@ class MangaNinjiaPipeline(DiffusionPipeline):
                 point_main=point_main
             )
             for k, v in to_save_dict.items():
-                to_save_dict[k] = Image.fromarray(
-                    chw2hwc(((v.squeeze().detach().cpu().numpy() + 1.) / 2 * 255).astype(np.uint8))
-                )
+                if k =='edge2_black':
+                    to_save_dict[k] = Image.fromarray(
+                   ((to_save_dict['edge2_black'][:,0].squeeze().detach().cpu().numpy() + 1.) / 2 * 255).astype(np.uint8)
+                    )
+                else:
+                    try:
+                        to_save_dict[k] = Image.fromarray(
+                        chw2hwc(((v.squeeze().detach().cpu().numpy() + 1.) / 2 * 255).astype(np.uint8))
+                        )
+                    except:
+                        import ipdb;ipdb.set_trace()
         
         torch.cuda.empty_cache()  # clear vram cache for ensembling
         
@@ -334,8 +344,6 @@ class MangaNinjiaPipeline(DiffusionPipeline):
         device = ref1.device
         to_save_dict = {
             'ref1': ref1,
-            'raw2': raw2,
-            'gt2': edit2,
         }
         
         # Set timesteps: inherit from the diffuison pipeline
@@ -344,17 +352,15 @@ class MangaNinjiaPipeline(DiffusionPipeline):
         
         # encode image
         ref1_latents = self.encode_RGB(ref1, generator=generator) # 1/8 Resolution with a channel nums of 4. 
-        raw2_latents = self.encode_RGB(raw2, generator=generator) # 1/8 Resolution with a channel nums of 4. 
         edge2_src = raw2
 
         timesteps_add,_=self.get_timesteps(num_inference_steps, 1.0, device, denoising_start=None)
         if is_lineart is not True:
             edge2 = preprocessor(edge2_src)
         else:
-            rgb_image = transforms.ToPILImage()(edge2_src.squeeze(0))
-            gray_image = rgb_image.convert('L')
-            gray_tensor = transforms.ToTensor()(gray_image)
-            edge2 = gray_tensor.unsqueeze(0).cuda()
+            gray_image_np = np.array(edge2_src)
+            gray_image_np = gray_image_np / 255.0
+            edge2 = torch.from_numpy(gray_image_np.astype(np.float32)).unsqueeze(0).unsqueeze(0).cuda()
         edge2[edge2<=0.24]=0
         edge2_black = edge2.repeat(1, 3, 1, 1) * 2 - 1.
         to_save_dict['edge2_black']=edge2_black
@@ -362,9 +368,8 @@ class MangaNinjiaPipeline(DiffusionPipeline):
         edge2 = edge2.repeat(1, 3, 1, 1) * 2 - 1.
         to_save_dict['edge2'] = (1-((edge2+1.)/2))*2-1
         
-        # Initial depth map (Guassian noise)
         noisy_edit2_latents = torch.randn(
-            raw2_latents.shape, device=device, dtype=self.dtype
+            ref1_latents.shape, device=device, dtype=self.dtype
         )  # [B, 4, H/8, W/8]
             
    
