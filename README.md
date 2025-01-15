@@ -127,10 +127,12 @@ This project is developped on the codebase of [MagicAnimate](https://github.com/
 Please cite our paper:
 
 ```bibtex
-@InProceedings{ke2023repurposing,
-      title={Repurposing Diffusion-Based Image Generators for Monocular Depth Estimation},
-      author={Bingxin Ke and Anton Obukhov and Shengyu Huang and Nando Metzger and Rodrigo Caye Daudt and Konrad Schindler},
-      booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
-      year={2024}
+@article{liu2024manganinja,
+  author  = {Zhiheng Liu and Ka Leong Cheng and Xi Chen and Jie Xiao and Hao Ouyang and Kai Zhu and Yu Liu and Yujun Shen
+             and Qifeng Chen and Ping Luo},
+  title   = {MangaNinja: Line Art Colorization with Precise Reference Following},
+  journal = {CoRR},
+  volume  = {abs/xxxx.xxxxx},
+  year    = {2024}
 }
 ```
