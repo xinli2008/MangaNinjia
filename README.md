@@ -3,7 +3,7 @@
 This repository represents the official implementation of the paper titled "MangaNinja: Line Art Colorization with Precise Reference Following".
 
 [![Website](docs/badge-website.svg)](https://johanan528.github.io/MangaNinjia/)
-[![Paper](https://img.shields.io/badge/arXiv-PDF-b31b1b)](https://arxiv.org/abs/2312.02145)
+[![Paper](https://img.shields.io/badge/arXiv-PDF-b31b1b)](https://arxiv.org/abs/2501.08332)
 [![License](https://img.shields.io/badge/License-Apache--2.0-929292)](https://www.apache.org/licenses/LICENSE-2.0)
 
 <p align="center">
