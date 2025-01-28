@@ -87,10 +87,10 @@ class MangaNinjiaPipeline(DiffusionPipeline):
     ) -> MangaNinjiaPipelineOutput:
 
         device = self.device
-        
         input_size = raw2.size
         point_ref=point_ref.float().to(device)
         point_main=point_main.float().to(device)
+        
         def img2embeds(img, image_enc):
             clip_image = self.clip_image_processor.preprocess(
                 img, return_tensors="pt"
@@ -100,6 +100,7 @@ class MangaNinjiaPipeline(DiffusionPipeline):
             ).image_embeds
             encoder_hidden_states = clip_image_embeds.unsqueeze(1)
             return encoder_hidden_states
+        
         if self.reference_unet:
             refnet_encoder_hidden_states = img2embeds(ref1, self.refnet_image_encoder)
         else:
@@ -122,10 +123,12 @@ class MangaNinjiaPipeline(DiffusionPipeline):
             empty_text_embed = text_encoder(text_input_ids)[0].to(self.dtype)
             uncond_encoder_hidden_states = empty_text_embed.repeat((1, 1, 1))[:,0,:].unsqueeze(0)
             return uncond_encoder_hidden_states
+        
         if self.reference_unet:
             refnet_uncond_encoder_hidden_states = prompt2embeds(prompt, self.refnet_tokenizer, self.refnet_text_encoder)
         else:
             refnet_uncond_encoder_hidden_states = None
+        
         if self.controlnet:
             controlnet_uncond_encoder_hidden_states = prompt2embeds(prompt, self.controlnet_tokenizer, self.controlnet_text_encoder)
         else:
@@ -279,7 +282,6 @@ class MangaNinjiaPipeline(DiffusionPipeline):
             to_save_dict=to_save_dict
         )
 
-    
     def __encode_empty_text(self):
         """
         Encode text embedding for empty prompt
@@ -401,7 +403,7 @@ class MangaNinjiaPipeline(DiffusionPipeline):
                         encoder_hidden_states=refnet_encoder_hidden_states,
                         return_dict=False,
                     )
-                    reference_control_reader.update(reference_control_writer,point_embedding_ref=point_ref,point_embedding_main=point_main)#size不对
+                    reference_control_reader.update(reference_control_writer, point_embedding_ref=point_ref, point_embedding_main=point_main) #size不对
 
             if self.controlnet:
                 noisy_latents, controlnet_cond = controlnet_inputs
@@ -449,7 +451,6 @@ class MangaNinjiaPipeline(DiffusionPipeline):
 
         return edit2, to_save_dict
         
-    
     def encode_RGB(self, rgb_in: torch.Tensor, generator) -> torch.Tensor:
         """
         Encode RGB image into latent.

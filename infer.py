@@ -183,11 +183,8 @@ if "__main__" == __name__:
     controlnet_tokenizer = CLIPTokenizer.from_pretrained(args.image_encoder_path)
     controlnet_text_encoder = CLIPTextModel.from_pretrained(args.image_encoder_path)
     controlnet_image_encoder = CLIPVisionModelWithProjection.from_pretrained(args.image_encoder_path)
-        
-
+    
     point_net=PointNet()
-
-
 
     controlnet.load_state_dict(
             torch.load(args.manga_controlnet_model_path, map_location="cpu"),

@@ -11,29 +11,23 @@ import os
 import re
 from PIL import Image, ImageDraw
 import cv2
-#
 from transformers import CLIPTextModel, CLIPTokenizer, CLIPVisionModelWithProjection
 import torch.nn as nn
 from inference.manganinjia_pipeline import MangaNinjiaPipeline
-from diffusers import (
-    ControlNetModel,
-    DiffusionPipeline,
-    DDIMScheduler,
-    AutoencoderKL,
-)
+from diffusers import ControlNetModel, DiffusionPipeline, DDIMScheduler, AutoencoderKL
 from src.models.mutual_self_attention_multi_scale import ReferenceAttentionControl
 from src.models.unet_2d_condition import UNet2DConditionModel
 from src.models.refunet_2d_condition import RefUNet2DConditionModel
 from src.point_network import PointNet
 from src.annotator.lineart import BatchLineartDetector
 val_configs = OmegaConf.load('./configs/inference.yaml')
+
 # === load the checkpoint ===
 pretrained_model_name_or_path = val_configs.model_path.pretrained_model_name_or_path
 refnet_clip_vision_encoder_path = val_configs.model_path.clip_vision_encoder_path
 controlnet_clip_vision_encoder_path = val_configs.model_path.clip_vision_encoder_path
 controlnet_model_name_or_path = val_configs.model_path.controlnet_model_name
 annotator_ckpts_path = val_configs.model_path.annotator_ckpts_path
-
 output_root = val_configs.inference_config.output_path
 device = val_configs.inference_config.device
 preprocessor = BatchLineartDetector(annotator_ckpts_path)
@@ -74,7 +68,10 @@ controlnet_text_encoder = CLIPTextModel.from_pretrained(controlnet_clip_vision_e
 controlnet_image_enc = CLIPVisionModelWithProjection.from_pretrained(controlnet_clip_vision_encoder_path)
       
 
-point_net=PointNet()
+point_net = PointNet()
+
+############################################################################################
+# Reference Unet和Denoising Unet的常见写法, 将reference_unet的部分特征传递给Denoising Unet
 reference_control_writer = ReferenceAttentionControl(
             reference_unet,
             do_classifier_free_guidance=False,
@@ -87,8 +84,7 @@ reference_control_reader = ReferenceAttentionControl(
     mode="read",
     fusion_blocks="full",
 )
-
-
+############################################################################################
 
 controlnet.load_state_dict(
         torch.load(val_configs.model_path.manga_control_model_path, map_location="cpu"),
@@ -121,18 +117,25 @@ pipe = MangaNinjiaPipeline(
         point_net=point_net
     )
 pipe = pipe.to(torch.device(device))
+
+
 def string_to_np_array(coord_string):
     coord_string = coord_string.strip('[]')
     coords = re.findall(r'\d+', coord_string)
     coords = list(map(int, coords))
     coord_array = np.array(coords).reshape(-1, 2)
     return coord_array
+
+
 def infer_single(is_lineart, ref_image, target_image, output_coords_ref, output_coords_base, seed = -1, num_inference_steps=20, guidance_scale_ref = 9, guidance_scale_point =15 ):
     """
     mask: 0/1 1-channel  np.array
     image: rgb           np.array
     """
     generator = torch.cuda.manual_seed(seed)
+
+    ###########################################################################
+    # NOTE: point on reference image and point on target image
     matrix1 = np.zeros((512, 512), dtype=np.uint8)
     matrix2 = np.zeros((512, 512), dtype=np.uint8)
     output_coords_ref = string_to_np_array(output_coords_ref)
@@ -144,6 +147,8 @@ def infer_single(is_lineart, ref_image, target_image, output_coords_ref, output_
         matrix2[y2, x2] = index + 1
     point_ref = torch.from_numpy(matrix1).unsqueeze(0).unsqueeze(0)
     point_main = torch.from_numpy(matrix2).unsqueeze(0).unsqueeze(0)
+    ############################################################################
+
     preprocessor.to(device,dtype=torch.float32) 
     pipe_out = pipe(
         is_lineart,
@@ -177,9 +182,9 @@ def inference_single_image(ref_image,
                            ):
     if seed == -1:
         seed = np.random.randint(10000)
-    pipe_out = infer_single(is_lineart, ref_image, tar_image, output_coords_ref=output_coords1, output_coords_base=output_coords2,seed=seed ,num_inference_steps=ddim_steps, guidance_scale_ref = scale_ref, guidance_scale_point = scale_point
-                           )
+    pipe_out = infer_single(is_lineart, ref_image, tar_image, output_coords_ref=output_coords1, output_coords_base=output_coords2,seed=seed ,num_inference_steps=ddim_steps, guidance_scale_ref = scale_ref, guidance_scale_point = scale_point)
     return pipe_out
+
 clicked_points_img1 = []
 clicked_points_img2 = []
 current_img_idx = 0  
@@ -303,6 +308,7 @@ def run_local(ref, base, *args):
     to_save_dict = pipe_out.to_save_dict
     to_save_dict['edit2'] = pipe_out.img_pil
     return [to_save_dict['edit2'], to_save_dict['edge2_black']]
+
 
 with gr.Blocks() as demo:
     with gr.Column():
