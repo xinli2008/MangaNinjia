@@ -8,7 +8,7 @@ MangaNinja的整体框架包括两个主要分支：Reference_Unet和Denoising_U
 3. 点驱动控制机制：用户可以定义参考图像和线条艺术之间的匹配点，利用PointNet来增强模型对这些点的感知，从而实现区域对齐的上色。PointNet是一个由多层卷积和SiLU激活函数组成的网络，用于将用户定义的点对编码为多尺度嵌入特征。这些特征通过交叉注意力机制与Denoising_Unet融合，增强模型对用户指定点的理解和控制能力。
 
 4. 训练流程：模型的训练分为两个阶段，第一个阶段中，模型训练Reference_Unet、Denoising_Unet和PointNet，训练内容包括特征融合，Patch_Unshuffle和条件丢弃（Condition_drop）。在第二个阶段，只训练PointNet, 进一步提升模型对用户定义点对的编码和感知能力。在MangaNinja模型的训练过程中，两张图片（参考图像和目标图像）之间的匹配点是通过一个[LightGlue](https://github.com/cvg/LightGlue)点匹配算法得到的。
-
+-------------------------------------------
 # MangaNinja: Line Art Colorization with Precise Reference Following
 
 This repository represents the official implementation of the paper titled "MangaNinja: Line Art Colorization with Precise Reference Following".
