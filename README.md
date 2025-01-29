@@ -1,3 +1,14 @@
+# Update:
+MangaNinja的整体框架包括两个主要分支：Reference_Unet和Denoising_UNet。方法的关键步骤如下:
+
+1. 整体流程：通过随机选择视频中的两帧，一帧作为参考图像，另一帧及其线稿作为目标输入。这两帧分别输入到Reference_UNet和Denoising_UNet中。Reference_Unet和Denoising_Unet通过self_attention机制来完成feature fusion。
+
+2. Patch Unshuffle策略：将参考图像分割为多个小patch并随机重排，迫使模型在优化过程中关注局部细节，而非全局结构，增强局部匹配能力。这种打乱是逐步增加的，即Progressive Patch Unshuffle，从2×2到32×32，采用从粗到细的学习策略。
+
+3. 点驱动控制机制：用户可以定义参考图像和线条艺术之间的匹配点，利用PointNet来增强模型对这些点的感知，从而实现区域对齐的上色。PointNet是一个由多层卷积和SiLU激活函数组成的网络，用于将用户定义的点对编码为多尺度嵌入特征。这些特征通过交叉注意力机制与Denoising_Unet融合，增强模型对用户指定点的理解和控制能力。
+
+4. 训练流程：模型的训练分为两个阶段，第一个阶段中，模型训练Reference_Unet、Denoising_Unet和PointNet，训练内容包括特征融合，Patch_Unshuffle和条件丢弃（Condition_drop）。在第二个阶段，只训练PointNet, 进一步提升模型对用户定义点对的编码和感知能力。在MangaNinja模型的训练过程中，两张图片（参考图像和目标图像）之间的匹配点是通过一个[LightGlue](https://github.com/cvg/LightGlue)点匹配算法得到的。
+
 # MangaNinja: Line Art Colorization with Precise Reference Following
 
 This repository represents the official implementation of the paper titled "MangaNinja: Line Art Colorization with Precise Reference Following".
